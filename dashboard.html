@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Audit Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#2563EB;
+    --primary-dark:#1D4ED8;
+    --primary-tint:#EFF4FE;
+    --dark:#0F172A;
+    --dark-2:#1E293B;
+    --bg:#F8FAFC;
+    --surface:#FFFFFF;
+    --border:#E2E8F0;
+    --text:#0F172A;
+    --text-2:#64748B;
+    --critical:#DC2626;
+    --critical-tint:#FEF2F2;
+    --serious:#EA580C;
+    --serious-tint:#FFF7ED;
+    --moderate:#D97706;
+    --moderate-tint:#FFFBEB;
+    --minor:#16A34A;
+    --minor-tint:#F0FDF4;
+    --radius-sm:6px;
+    --radius-md:8px;
+    --sidebar-w:224px;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    margin:0;
+    font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+    line-height:1.5;
+  }
+
+  code, pre, .mono{ font-family:ui-monospace,"SFMono-Regular",Menlo,Monaco,Consolas,"JetBrains Mono",monospace; }
+
+  a{ color:var(--primary); }
+
+  button{ font-family:inherit; }
+
+  :focus-visible{
+    outline:2px solid var(--primary);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------- Layout shell ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns:var(--sidebar-w) minmax(0,1fr);
+    min-height:100vh;
+    max-width:100vw;
+    overflow-x:hidden;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    background:var(--dark);
+    color:#CBD5E1;
+    padding:20px 14px;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:6px 8px 20px;
+    border-bottom:1px solid #24344B;
+    margin-bottom:16px;
+  }
+
+  .brand-mark{
+    width:26px; height:26px;
+    border-radius:6px;
+    background:var(--primary);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:13px;
+    flex-shrink:0;
+  }
+
+  .brand-text{
+    font-weight:700;
+    font-size:13.5px;
+    color:#F1F5F9;
+    line-height:1.25;
+  }
+
+  .brand-text small{
+    display:block;
+    font-weight:500;
+    font-size:10.5px;
+    color:#7C8CA8;
+    letter-spacing:.02em;
+  }
+
+  .nav-group-label{
+    font-size:10.5px;
+    font-weight:600;
+    color:#57667F;
+    letter-spacing:.04em;
+    padding:0 10px;
+    margin:16px 0 6px;
+  }
+
+  .nav-list{ list-style:none; margin:0; padding:0; }
+
+  .nav-link{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:8px 10px;
+    border-radius:var(--radius-sm);
+    color:#AEBBD1;
+    text-decoration:none;
+    font-size:13.5px;
+    font-weight:500;
+    margin-bottom:2px;
+  }
+
+  .nav-link svg{ flex-shrink:0; opacity:.85; }
+
+  .nav-link:hover{ background:#182233; color:#F1F5F9; }
+
+  .nav-link[aria-current="page"]{
+    background:var(--primary);
+    color:#fff;
+  }
+
+  .nav-link[aria-current="page"] svg{ opacity:1; }
+
+  /* ---------- Main ---------- */
+  .main{ min-width:0; }
+
+  .topbar{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:16px 28px;
+    position:sticky;
+    top:0;
+    z-index:5;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .topbar h1{
+    font-size:18px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+
+  .topbar-meta{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--minor);
+    background:var(--minor-tint);
+    padding:5px 10px 5px 8px;
+    border-radius:999px;
+  }
+
+  .status-dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--minor);
+    flex-shrink:0;
+  }
+
+  .status-pill.status-offline{ color:var(--critical); background:var(--critical-tint); }
+  .status-pill.status-offline .status-dot{ background:var(--critical); }
+
+  .target-line{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    max-width:360px;
+    min-width:0;
+  }
+
+  .target-label{
+    display:block;
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--text-2);
+    letter-spacing:.05em;
+  }
+
+  .target-value{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:100%;
+  }
+
+  .content{
+    padding:24px 28px 60px;
+    max-width:1280px;
+  }
+
+  section{ margin-bottom:28px; }
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+
+  .section-head h2{
+    font-size:14.5px;
+    font-weight:700;
+    margin:0;
+    color:var(--text);
+  }
+
+  .section-sub{
+    font-size:12.5px;
+    color:var(--text-2);
+    margin:2px 0 0;
+  }
+
+  /* ---------- KPI cards ---------- */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:12px;
+  }
+
+  .kpi-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    border-top:3px solid var(--border);
+  }
+
+  .kpi-card[data-sev="critical"]{ border-top-color:var(--critical); }
+  .kpi-card[data-sev="serious"]{ border-top-color:var(--serious); }
+  .kpi-card[data-sev="moderate"]{ border-top-color:var(--moderate); }
+  .kpi-card[data-sev="minor"]{ border-top-color:var(--minor); }
+  .kpi-card[data-sev="primary"]{ border-top-color:var(--primary); }
+
+  .kpi-label{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.03em;
+    color:var(--text-2);
+    margin:0 0 8px;
+  }
+
+  .kpi-value{
+    font-size:26px;
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1;
+    margin:0 0 6px;
+  }
+
+  .kpi-desc{
+    font-size:11.5px;
+    color:var(--text-2);
+    margin:0;
+  }
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:18px 20px;
+  }
+
+  /* ---------- Chart ---------- */
+  .chart-row{
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+  }
+
+  .chart-row:last-child{ border-bottom:none; padding-bottom:0; }
+  .chart-row:first-child{ padding-top:0; }
+
+  .chart-page-name{
+    font-weight:600;
+    font-size:12.5px;
+    margin-bottom:8px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:100%;
+  }
+
+  .chart-bar-line{
+    display:grid;
+    grid-template-columns:96px 1fr 40px;
+    align-items:center;
+    gap:10px;
+    margin-bottom:6px;
+  }
+
+  .chart-bar-tag{
+    font-size:11px;
+    font-weight:600;
+    color:var(--text-2);
+  }
+
+  .chart-bar-track{
+    width:100%;
+    height:16px;
+    background:#EEF1F6;
+    border-radius:4px;
+    overflow:hidden;
+  }
+
+  .chart-bar-fill{
+    height:100%;
+    border-radius:4px;
+    min-width:3px;
+  }
+
+  .chart-bar-fill.current{ background:var(--primary); }
+  .chart-bar-fill.previous{ background:#94A3B8; }
+
+  .chart-bar-value{
+    font-size:11.5px;
+    font-weight:700;
+    text-align:right;
+  }
+
+  .chart-legend{
+    display:flex;
+    gap:16px;
+    margin-bottom:16px;
+    font-size:12px;
+    color:var(--text-2);
+  }
+
+  .chart-legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .legend-swatch{
+    width:10px; height:10px; border-radius:2px; display:inline-block;
+  }
+
+  .legend-swatch.current{ background:var(--primary); }
+  .legend-swatch.previous{ background:#94A3B8; }
+
+  /* ---------- Issue list ---------- */
+  .issue-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:24px;
+    margin-bottom:12px;
+    box-shadow:0 1px 2px rgba(15,23,42,.05);
+    border-left:3px solid var(--border);
+  }
+
+  .issue-card[data-severity="critical"]{ border-left-color:var(--critical); }
+  .issue-card[data-severity="serious"]{ border-left-color:var(--serious); }
+  .issue-card[data-severity="moderate"]{ border-left-color:var(--moderate); }
+  .issue-card[data-severity="minor"]{ border-left-color:var(--minor); }
+
+  .issue-card:last-child{ margin-bottom:0; }
+
+  .issue-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .issue-main{ min-width:0; flex:1 1 260px; }
+  .issue-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.issue-screenshot {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #F1F5F9;
+}
+
+.issue-screenshot-wrap {
+  min-width: 0;
+}
+
+.issue-screenshot-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px) {
+  .issue-content {
+    grid-template-columns: 1fr;
+  }
+
+  .issue-screenshot {
+    max-height: 260px;
+  }
+}
+
+  .issue-name{
+    font-size:13.5px;
+    font-weight:700;
+    margin:0 0 6px;
+    word-break:break-word;
+  }
+
+  .issue-meta{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:2px;
+  }
+
+  .meta-row{ min-width:0; }
+
+  .meta-label{
+    display:block;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.04em;
+    color:var(--text-2);
+    margin-bottom:2px;
+  }
+
+  .meta-value{
+    display:block;
+    font-size:12px;
+    color:var(--text);
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+  .meta-value.mono{
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Monaco,Consolas,"JetBrains Mono",monospace;
+    background:#F1F5F9;
+    border-radius:4px;
+    padding:3px 6px;
+    font-size:11.5px;
+    display:inline-block;
+    max-width:100%;
+  }
+
+  .severity-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.03em;
+    padding:3px 8px;
+    border-radius:4px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+
+  .severity-badge::before{
+    content:"";
+    width:6px; height:6px; border-radius:50%;
+  }
+
+  .severity-badge.critical{ color:var(--critical); background:var(--critical-tint); }
+  .severity-badge.critical::before{ background:var(--critical); }
+  .severity-badge.serious{ color:var(--serious); background:var(--serious-tint); }
+  .severity-badge.serious::before{ background:var(--serious); }
+  .severity-badge.moderate{ color:var(--moderate); background:var(--moderate-tint); }
+  .severity-badge.moderate::before{ background:var(--moderate); }
+  .severity-badge.minor{ color:var(--minor); background:var(--minor-tint); }
+  .severity-badge.minor::before{ background:var(--minor); }
+
+  .issue-count-label{
+    font-size:12px;
+    color:var(--text-2);
+    font-weight:600;
+    letter-spacing:.01em;
+  }
+
+  .issue-actions{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    min-height:32px;
+    font-size:12.5px;
+    font-weight:600;
+    padding:0 14px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    cursor:pointer;
+    line-height:1;
+    transition:background .12s ease, border-color .12s ease;
+  }
+
+  .btn:hover{ background:#F1F5F9; }
+  .btn:active{ background:#E2E8F0; }
+
+  .btn-primary{
+    background:var(--primary);
+    border-color:var(--primary);
+    color:#fff;
+  }
+
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-primary:active{ background:#1E40AF; }
+
+  .btn-secondary{
+    background:var(--dark);
+    border-color:var(--dark);
+    color:#fff;
+  }
+
+  .btn-secondary:hover{ background:var(--dark-2); }
+  .btn-secondary:active{ background:#0B1220; }
+
+  .btn:disabled{
+    opacity:.6;
+    cursor:default;
+  }
+
+  .btn .spinner{
+    width:12px; height:12px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.5);
+    border-top-color:#fff;
+    animation:spin .7s linear infinite;
+  }
+
+  .btn:not(.btn-primary):not(.btn-secondary) .spinner{
+    border:2px solid #CBD5E1;
+    border-top-color:var(--primary);
+  }
+
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---------- AI result panel ---------- */
+  .ai-panel{
+    margin-top:12px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    background:var(--primary-tint);
+    overflow:hidden;
+  }
+
+  .ai-panel-head{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:9px 12px;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--primary-dark);
+    border-bottom:1px solid #DCE6FB;
+  }
+
+  .ai-panel-body{
+    padding:14px;
+    background:var(--surface);
+  }
+
+  .ai-block{ margin-bottom:12px; }
+  .ai-block:last-child{ margin-bottom:0; }
+
+  .ai-block h4{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--text-2);
+    margin:0 0 5px;
+  }
+
+  .ai-block p{
+    font-size:13px;
+    margin:0;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+
+  .ai-block ul{
+    margin:0;
+    padding-left:18px;
+    font-size:13px;
+  }
+
+  .ai-block li{
+    margin-bottom:4px;
+    word-break:break-word;
+  }
+
+  .ai-block .inline-code{
+    font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+    background:#F1F5F9;
+    border-radius:3px;
+    padding:1px 4px;
+    font-size:12px;
+  }
+
+  .ai-code{
+    background:var(--dark);
+    color:#E2E8F0;
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-size:12.5px;
+    line-height:1.55;
+    overflow-x:auto;
+    white-space:pre;
+    margin:0;
+  }
+
+  .ai-error{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    color:var(--critical);
+    background:var(--critical-tint);
+    border-radius:var(--radius-sm);
+    padding:10px 12px;
+    font-size:12.5px;
+    font-weight:500;
+  }
+
+  /* ---------- Empty / error states ---------- */
+  .empty-state{
+    text-align:center;
+    padding:34px 16px;
+    color:var(--text-2);
+    font-size:13px;
+  }
+
+  .load-state{
+    text-align:center;
+    padding:28px 16px;
+    color:var(--text-2);
+    font-size:13px;
+  }
+
+  .error-state{
+    text-align:center;
+    padding:28px 16px;
+  }
+
+  .error-state p{
+    color:var(--critical);
+    font-size:13px;
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  .skeleton{
+    background:linear-gradient(90deg,#EEF1F6 25%,#F5F7FA 37%,#EEF1F6 63%);
+    background-size:400% 100%;
+    animation:shimmer 1.4s ease infinite;
+    border-radius:4px;
+  }
+
+  @keyframes shimmer{ 0%{ background-position:100% 0; } 100%{ background-position:0 0; } }
+
+  @media (prefers-reduced-motion: reduce){
+    .skeleton{ animation:none; background:#EEF1F6; }
+  }
+/* ---------- Live Audit ---------- */
+.audit-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.audit-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.audit-panel-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.audit-panel-subtitle {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.audit-form {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.audit-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.audit-input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.audit-input::placeholder {
+  color: #94A3B8;
+}
+
+.audit-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
+  outline: none;
+}
+
+.audit-submit {
+  height: 44px;
+  min-width: 110px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background .15s ease, transform .1s ease;
+}
+
+.audit-submit:hover {
+  background: var(--primary-dark);
+}
+
+.audit-submit:active {
+  transform: translateY(1px);
+}
+
+.audit-submit:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.audit-message {
+  display: none;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.audit-message.success {
+  display: block;
+  color: #166534;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+}
+
+.audit-message.error {
+  display: block;
+  color: #B91C1C;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+
+.audit-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255,255,255,.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@media (max-width:640px) {
+  .audit-panel {
+    padding: 16px;
+  }
+
+  .audit-form {
+    flex-direction: column;
+  }
+
+  .audit-submit {
+    width: 100%;
+  }
+}
+  /* ---------- Responsive ---------- */
+  @media (max-width:1024px){
+    .kpi-grid{ grid-template-columns:repeat(3,1fr); }
+  }
+
+  @media (max-width:900px){
+    .shell{ grid-template-columns:1fr; }
+    .sidebar{
+      position:sticky;
+      top:0;
+      height:auto;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 14px;
+      overflow-x:auto;
+      z-index:10;
+    }
+    .brand{ border-bottom:none; padding:0 10px 0 0; margin:0; border-right:1px solid #24344B; }
+    .nav-group-label{ display:none; }
+    .nav-list{ display:flex; gap:4px; }
+    .nav-link{ white-space:nowrap; }
+  }
+
+  @media (max-width:640px){
+    .topbar{ padding:14px 16px; }
+    .content{ padding:18px 16px 48px; }
+    .kpi-grid{ grid-template-columns:repeat(2,1fr); }
+    .chart-bar-line{ grid-template-columns:1fr; row-gap:4px; }
+    .chart-bar-value{ text-align:left; }
+    .topbar-meta{ width:100%; justify-content:space-between; }
+    .target-line{ max-width:none; }
+  }
+
+  @media (max-width:380px){
+    .kpi-grid{ grid-template-columns:1fr 1fr; }
+    .kpi-value{ font-size:22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <nav class="sidebar" aria-label="Primary">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">A11y</span>
+      <span class="brand-text">Accessibility Auditor<small>Developer Console</small></span>
+    </div>
+
+    <div class="nav-group-label">Audit</div>
+    <ul class="nav-list">
+      <li><a class="nav-link" href="#dashboard" aria-current="page">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="8.5" y="1.5" width="6" height="4.5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="8.5" y="8" width="6" height="6.5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="9.5" width="6" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+        Dashboard
+      </a></li>
+      <li><a class="nav-link" href="#top-issues">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5 14.5 13H1.5L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6.2v3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".9" fill="currentColor"/></svg>
+        Scan Results
+      </a></li>
+      <li><a class="nav-link" href="#top-issues">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.7" y="2.3" width="12.6" height="9.4" rx="1.4" stroke="currentColor" stroke-width="1.4"/><path d="M5.6 14.2h4.8M8 11.7v2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        AI Analysis
+      </a></li>
+    </ul>
+  </nav>
+
+  <div class="main">
+
+    <header class="topbar">
+      <h1>Accessibility Audit Dashboard</h1>
+      <div class="topbar-meta">
+        <div class="target-line">
+          <span class="target-label" id="targetLabel">TARGET</span>
+          <span class="target-value" id="targetUrl" title="">Loading latest scan…</span>
+        </div>
+        <span class="status-pill" id="statusPill">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="statusText">System Ready</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="content" id="mainContent">
+      <section class="audit-panel" aria-labelledby="audit-panel-title">
+  <div class="audit-panel-head">
+    <div>
+      <h2 class="audit-panel-title" id="audit-panel-title">
+        Run Accessibility Audit
+      </h2>
+      <p class="audit-panel-subtitle">
+        Enter a website URL to start a new Playwright + axe-core audit.
+      </p>
+    </div>
+  </div>
+
+  <form class="audit-form" id="auditForm">
+    <div class="audit-input-wrap">
+      <label class="visually-hidden" for="auditUrl">
+        Website URL
+      </label>
+
+      <input
+        type="url"
+        id="auditUrl"
+        class="audit-input"
+        placeholder="https://example.com"
+        autocomplete="url"
+        required
+      >
+    </div>
+
+    <button
+      type="submit"
+      class="audit-submit"
+      id="auditButton"
+    >
+      Audit
+    </button>
+  </form>
+
+  <div
+    class="audit-message"
+    id="auditMessage"
+    role="status"
+    aria-live="polite"
+  ></div>
+</section>
+
+      <section id="dashboard" aria-labelledby="kpi-heading">
+        <div class="section-head">
+          <div>
+            <h2 id="kpi-heading">Audit Summary</h2>
+            <p class="section-sub" id="scanContextLine">Loading scan summary…</p>
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="kpiGrid" aria-live="polite">
+          <div class="kpi-card" data-sev="primary">
+            <p class="kpi-label">PAGES SCANNED</p>
+            <p class="kpi-value" id="pagesScanned">–</p>
+            <p class="kpi-desc">Pages included in this audit</p>
+          </div>
+          <div class="kpi-card" data-sev="primary">
+            <p class="kpi-label">TOTAL ISSUES</p>
+            <p class="kpi-value" id="totalIssues">–</p>
+            <p class="kpi-desc">All violations detected</p>
+          </div>
+          <div class="kpi-card" data-sev="critical">
+            <p class="kpi-label">CRITICAL</p>
+            <p class="kpi-value" id="critical">–</p>
+            <p class="kpi-desc">Accessibility violations</p>
+          </div>
+          <div class="kpi-card" data-sev="serious">
+            <p class="kpi-label">SERIOUS</p>
+            <p class="kpi-value" id="serious">–</p>
+            <p class="kpi-desc">High-impact findings</p>
+          </div>
+          <div class="kpi-card" data-sev="moderate">
+            <p class="kpi-label">MODERATE</p>
+            <p class="kpi-value" id="moderate">–</p>
+            <p class="kpi-desc">Should be addressed soon</p>
+          </div>
+          <div class="kpi-card" data-sev="minor">
+            <p class="kpi-label">MINOR</p>
+            <p class="kpi-value" id="minor">–</p>
+            <p class="kpi-desc">Low-impact findings</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="chart-heading">
+        <div class="section-head">
+          <div>
+            <h2 id="chart-heading">Issues Over Time</h2>
+            <p class="section-sub">Current scan compared with previous scan</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div id="chartLegend"></div>
+          <div id="issuesChart">
+            <div class="load-state">Loading chart data…</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="top-issues" aria-labelledby="issues-heading">
+        <div class="section-head">
+          <div>
+            <h2 id="issues-heading">Top Issues</h2>
+            <p class="section-sub">Accessibility findings detected in the latest scan</p>
+          </div>
+        </div>
+        <div id="topIssues">
+          <div class="load-state">Loading issues…</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var topIssuesData = [];
+
+  /* ---------------- fetch helper ---------------- */
+
+  function getJSON(url){
+    return fetch(url).then(function(response){
+      return response.text().then(function(raw){
+        var data = null;
+        try { data = raw ? JSON.parse(raw) : null; }
+        catch(e){ data = null; }
+
+        if(!response.ok){
+          var msg = (data && data.error) ? data.error : (url + " returned HTTP " + response.status);
+          throw new Error(msg);
+        }
+        if(data === null){
+          throw new Error(url + " returned an invalid response.");
+        }
+        return data;
+      });
+    });
+  }
+
+  function el(tag, attrs, children){
+    var node = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function(key){
+      if(key === "class") node.className = attrs[key];
+      else if(key === "text") node.textContent = attrs[key];
+      else if(key === "html_unsafe_never_use"){ /* intentionally unsupported */ }
+      else node.setAttribute(key, attrs[key]);
+    });
+    (children || []).forEach(function(child){
+      if(child) node.appendChild(child);
+    });
+    return node;
+  }
+
+  function severityKey(sev){
+    var s = (sev || "").toLowerCase();
+    if(["critical","serious","moderate","minor"].indexOf(s) !== -1) return s;
+    return "moderate";
+  }
+
+  function severityBadge(sev){
+    var key = severityKey(sev);
+    return el("span", { class: "severity-badge " + key, text: key.toUpperCase() });
+  }
+
+  /* ---------------- summary ---------------- */
+
+  function toDisplayString(value){
+    if(value === null || value === undefined || value === "") return "";
+    if(Array.isArray(value)) return value.length ? String(value[0]) : "";
+    if(typeof value === "object") return "";
+    return String(value);
+  }
+
+  function renderSummary(summary){
+    var target = toDisplayString(summary.targetUrl) || "No scan available";
+    var targetEl = document.getElementById("targetUrl");
+    targetEl.textContent = target;
+    targetEl.title = target;
+
+    document.getElementById("pagesScanned").textContent = summary.pagesScanned ?? 0;
+    document.getElementById("totalIssues").textContent = summary.total ?? 0;
+    document.getElementById("critical").textContent = summary.critical ?? 0;
+    document.getElementById("serious").textContent = summary.serious ?? 0;
+    document.getElementById("moderate").textContent = summary.moderate ?? 0;
+    document.getElementById("minor").textContent = summary.minor ?? 0;
+
+    var contextLine = document.getElementById("scanContextLine");
+    var pages = summary.pagesScanned ?? 0;
+    var total = summary.total ?? 0;
+    if(summary.targetUrl){
+      contextLine.textContent = pages + (pages === 1 ? " page" : " pages") + " scanned · " +
+        total + (total === 1 ? " issue" : " issues") + " found";
+      if(summary.lastScanAt){
+        contextLine.textContent += " · Last scan " + formatTimestamp(summary.lastScanAt);
+      }
+    } else {
+      contextLine.textContent = "No scan data available yet.";
+    }
+  }
+
+  function formatTimestamp(value){
+    var date = new Date(value);
+    if(isNaN(date.getTime())) return String(value);
+    return date.toLocaleString(undefined, {
+      month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+    });
+  }
+
+  /* Shortens a full page URL to its path for compact chart labels
+     (e.g. "https://www.youtube.com/shorts/" -> "/shorts/"). Falls back
+     to the original string when it isn't a parseable URL, and never
+     drops the full value — callers keep it in the title attribute. */
+  function shortenUrlForLabel(url){
+    try {
+      var parsed = new URL(url);
+      var path = parsed.pathname + parsed.search;
+      return path && path !== "/" ? path : (parsed.hostname || url);
+    } catch (e) {
+      return url;
+    }
+  }
+
+  function renderSummaryError(){
+    document.getElementById("targetUrl").textContent = "Unable to load";
+    document.getElementById("scanContextLine").textContent = "Unable to load audit data.";
+    ["pagesScanned","totalIssues","critical","serious","moderate","minor"].forEach(function(id){
+      document.getElementById(id).textContent = "—";
+    });
+  }
+
+  /* ---------------- chart ---------------- */
+
+  function renderChart(chartData){
+    var container = document.getElementById("issuesChart");
+    var legend = document.getElementById("chartLegend");
+    container.innerHTML = "";
+    legend.innerHTML = "";
+
+    var current = chartData.current || [];
+    var previous = chartData.previous || [];
+
+    var pages = [];
+    var seen = {};
+    current.concat(previous).forEach(function(item){
+      if(item && item.page && !seen[item.page]){ seen[item.page] = true; pages.push(item.page); }
+    });
+
+    if(pages.length === 0){
+      container.appendChild(el("div", { class: "empty-state", text: "No scan data available." }));
+      return;
+    }
+
+    legend.appendChild(el("div", { class: "chart-legend" }, [
+      el("span", {}, [ el("span", { class: "legend-swatch current" }), document.createTextNode("Current Scan") ]),
+      el("span", {}, [ el("span", { class: "legend-swatch previous" }), document.createTextNode("Previous Scan") ])
+    ]));
+
+    var currentMap = {}, previousMap = {};
+    current.forEach(function(item){ currentMap[item.page] = Number(item.count) || 0; });
+    previous.forEach(function(item){ previousMap[item.page] = Number(item.count) || 0; });
+
+    var maxValue = 1;
+    pages.forEach(function(page){
+      maxValue = Math.max(maxValue, currentMap[page] || 0, previousMap[page] || 0);
+    });
+
+    pages.forEach(function(page){
+      var cur = currentMap[page] || 0;
+      var prev = previousMap[page] || 0;
+      var hasPrev = Object.prototype.hasOwnProperty.call(previousMap, page);
+
+      var row = el("div", { class: "chart-row" });
+      row.appendChild(el("div", { class: "chart-page-name", title: page, text: shortenUrlForLabel(page) }));
+
+      row.appendChild(el("div", { class: "chart-bar-line" }, [
+        el("span", { class: "chart-bar-tag", text: "Current" }),
+        el("div", { class: "chart-bar-track" }, [
+          el("div", { class: "chart-bar-fill current", style: "width:" + ((cur / maxValue) * 100) + "%" })
+        ]),
+        el("span", { class: "chart-bar-value", text: String(cur) })
+      ]));
+
+      row.appendChild(el("div", { class: "chart-bar-line" }, [
+        el("span", { class: "chart-bar-tag", text: "Previous" }),
+        el("div", { class: "chart-bar-track" }, [
+          el("div", { class: "chart-bar-fill previous", style: "width:" + (hasPrev ? ((prev / maxValue) * 100) : 0) + "%" })
+        ]),
+        el("span", { class: "chart-bar-value", text: hasPrev ? String(prev) : "—" })
+      ]));
+
+      container.appendChild(row);
+    });
+  }
+
+  function renderChartError(){
+    var container = document.getElementById("issuesChart");
+    container.innerHTML = "";
+    container.appendChild(buildErrorState("Unable to load chart data.", loadChart));
+  }
+
+  /* ---------------- top issues ---------------- */
+
+  function renderTopIssues(issues){
+    topIssuesData = issues || [];
+    var container = document.getElementById("topIssues");
+    container.innerHTML = "";
+
+    if(!topIssuesData.length){
+      container.appendChild(el("div", { class: "empty-state", text: "No accessibility issues detected for this scan." }));
+      return;
+    }
+
+    topIssuesData.forEach(function(item, index){
+      container.appendChild(buildIssueCard(item, index));
+    });
+  }
+
+  function occurrenceText(count){
+    var n = Number(count) || 0;
+    return "Occurrence" + (n === 1 ? "" : "s") + ": " + n;
+  }
+
+  function buildIssueCard(item, index){
+    var sevKey = severityKey(item.severity);
+    var card = el("article", { class: "issue-card", "data-severity": sevKey });
+
+    var metaRows = [];
+    if(item.page){
+      var pageVal = toDisplayString(item.page);
+      metaRows.push(el("div", { class: "meta-row" }, [
+        el("span", { class: "meta-label", text: "PAGE" }),
+        el("span", { class: "meta-value", title: pageVal, text: pageVal })
+      ]));
+    }
+    if(item.selector){
+      var selVal = toDisplayString(item.selector);
+      metaRows.push(el("div", { class: "meta-row" }, [
+        el("span", { class: "meta-label", text: "SELECTOR" }),
+        el("span", { class: "meta-value mono", title: selVal, text: selVal })
+      ]));
+    }
+
+    var main = el("div", { class: "issue-main" }, [
+      el("h3", { class: "issue-name", text: item.issue || "Unnamed issue" }),
+      el("div", { class: "issue-meta" }, metaRows)
+    ]);
+
+    var countBlock = el("div", { style: "text-align:right;flex-shrink:0;" }, [
+      severityBadge(item.severity),
+      el("div", { class: "issue-count-label", style: "margin-top:7px;" }, [
+        document.createTextNode(occurrenceText(item.count))
+      ])
+    ]);
+
+    var issueContentChildren = [main];
+
+if (item.screenshot_path) {
+  var screenshotWrap = el("div", { class: "issue-screenshot-wrap" });
+
+  screenshotWrap.appendChild(
+    el("span", {
+      class: "issue-screenshot-label",
+      text: "PAGE SCREENSHOT"
+    })
+  );
+
+  var screenshot = el("img", {
+    class: "issue-screenshot",
+    src: item.screenshot_path,
+    alt: "Screenshot of " + (item.page || "scanned page"),
+    loading: "lazy"
+  });
+
+  screenshotWrap.appendChild(screenshot);
+  issueContentChildren.push(screenshotWrap);
+}
+
+var issueContent = el("div", {
+  class: "issue-content"
+}, issueContentChildren);
+
+var top = el("div", { class: "issue-top" }, [
+  issueContent,
+  countBlock
+]);
+
+
+
+    var issueLabel = item.issue || "this issue";
+    var explainBtn = el("button", { class: "btn btn-primary", type: "button", "aria-expanded": "false", "aria-controls": "ai-result-" + index, "aria-label": "AI Explain: " + issueLabel }, [ document.createTextNode("AI Explain") ]);
+    var fixBtn = el("button", { class: "btn btn-secondary", type: "button", "aria-expanded": "false", "aria-controls": "fix-result-" + index, "aria-label": "AI Fix: " + issueLabel }, [ document.createTextNode("AI Fix") ]);
+
+    var actions = el("div", { class: "issue-actions" }, [ explainBtn, fixBtn ]);
+
+    var explainResult = el("div", { id: "ai-result-" + index, class: "ai-result", "aria-live": "polite", style: "display:none;" });
+    var fixResult = el("div", { id: "fix-result-" + index, class: "ai-result", "aria-live": "polite", style: "display:none;" });
+
+    explainBtn.addEventListener("click", function(){
+      runAIRequest({
+        button: explainBtn,
+        otherButton: fixBtn,
+        target: explainResult,
+        endpoint: "/api/ai-explain",
+        loadingText: "Analyzing accessibility issue…",
+        item: item,
+        mode: "explain"
+      });
+    });
+
+    fixBtn.addEventListener("click", function(){
+      runAIRequest({
+        button: fixBtn,
+        otherButton: explainBtn,
+        target: fixResult,
+        endpoint: "/api/ai-fix",
+        loadingText: "Generating developer fix…",
+        item: item,
+        mode: "fix"
+      });
+    });
+
+    card.appendChild(top);
+    card.appendChild(actions);
+    card.appendChild(explainResult);
+    card.appendChild(fixResult);
+
+    return card;
+  }
+
+  function renderTopIssuesError(){
+    var container = document.getElementById("topIssues");
+    container.innerHTML = "";
+    container.appendChild(buildErrorState("Unable to load audit data.", loadTopIssues));
+  }
+
+  function buildErrorState(message, retryFn){
+    var wrap = el("div", { class: "error-state" });
+    wrap.appendChild(el("p", { text: message }));
+    var retry = el("button", { class: "btn", type: "button", text: "Retry" });
+    retry.addEventListener("click", retryFn);
+    wrap.appendChild(retry);
+    return wrap;
+  }
+
+  /* ---------------- AI request handling ---------------- */
+
+  function runAIRequest(config){
+    var button = config.button, target = config.target, item = config.item;
+
+    if(button.disabled) return;
+
+    var originalContent = button.textContent;
+    button.disabled = true;
+    button.setAttribute("aria-expanded", "true");
+    button.innerHTML = "";
+    button.appendChild(el("span", { class: "spinner", "aria-hidden": "true" }));
+    button.appendChild(document.createTextNode(" " + (config.mode === "explain" ? "Analyzing…" : "Generating…")));
+
+    target.style.display = "block";
+    target.innerHTML = "";
+    target.appendChild(el("div", { class: "load-state", text: config.loadingText }));
+
+    fetch(config.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        issue: item.issue,
+        severity: item.severity,
+        page: item.page || "",
+        selector: item.selector || ""
+      })
+    })
+    .then(function(response){
+      return response.text().then(function(raw){
+        var data = null;
+        try { data = raw ? JSON.parse(raw) : null; } catch(e){ data = null; }
+
+        if(!response.ok || !data){
+          var msg = (data && data.error) ? data.error : ("Request failed with HTTP " + response.status);
+          throw new Error(msg);
+        }
+        return data;
+      });
+    })
+    .then(function(data){
+      var text = config.mode === "explain" ? data.explanation : data.fix;
+      renderAIResult(target, text, config.mode);
+    })
+    .catch(function(error){
+      renderAIError(target, error, config.mode);
+    })
+    .finally(function(){
+      button.disabled = false;
+      button.setAttribute("aria-expanded", "false");
+      button.innerHTML = "";
+      button.appendChild(document.createTextNode(originalContent));
+    });
+  }
+
+  function renderAIError(target, error, mode){
+    target.innerHTML = "";
+    var panel = el("div", { class: "ai-panel" });
+    panel.appendChild(el("div", { class: "ai-panel-head" }, [ document.createTextNode(mode === "explain" ? "AI Explanation" : "AI Fix") ]));
+    var body = el("div", { class: "ai-panel-body" });
+    var fallback = mode === "explain"
+      ? "Unable to generate AI explanation. Please ensure the local AI service is running."
+      : "Unable to generate AI fix. Please ensure the local AI service is running.";
+    var message = (error && error.message) ? error.message : fallback;
+    body.appendChild(el("div", { class: "ai-error", text: message }));
+    panel.appendChild(body);
+    target.appendChild(panel);
+  }
+
+  /* Safely render AI text output. Never uses innerHTML for model content.
+     1) Splits on fenced code blocks (```...```) so code renders in a
+        dedicated dark code block via textContent.
+     2) Cleans remaining markdown syntax (headings, bullets, bold/italic,
+        links, images, stray backticks/fences) out of the prose so the
+        model's raw Markdown is never shown to the user.
+     3) Builds every node with textContent/createElement — model text can
+        never execute as HTML or JavaScript, and no link is ever made
+        clickable. */
+  function renderAIResult(target, rawText, mode){
+    target.innerHTML = "";
+    var panel = el("div", { class: "ai-panel" });
+    panel.appendChild(el("div", { class: "ai-panel-head" }, [ document.createTextNode(mode === "explain" ? "AI Explanation" : "AI Fix") ]));
+
+    var body = el("div", { class: "ai-panel-body" });
+
+    var text = (typeof rawText === "string" && rawText.trim()) ? rawText : "";
+    if(!text){
+      body.appendChild(el("div", { class: "ai-error", text: "The AI service returned an empty response." }));
+      panel.appendChild(body);
+      target.appendChild(panel);
+      return;
+    }
+
+    var segments = splitCodeFences(text);
+
+    segments.forEach(function(segment){
+      if(segment.type === "code"){
+        var pre = el("pre", { class: "ai-code" });
+        var codeEl = document.createElement("code");
+        codeEl.textContent = segment.content;
+        pre.appendChild(codeEl);
+        body.appendChild(el("div", { class: "ai-block" }, [
+          el("h4", { text: segment.lang ? segment.lang.toUpperCase() : "CODE" }),
+          pre
+        ]));
+      } else {
+        appendProseBlock(body, segment.content);
+      }
+    });
+
+    if(!body.childNodes.length){
+      body.appendChild(el("div", { class: "ai-error", text: "The AI service returned an empty response." }));
+    }
+
+    panel.appendChild(body);
+    target.appendChild(panel);
+  }
+
+  function splitCodeFences(text){
+    var parts = [];
+    // Matched fences first.
+    var fenceRe = /```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g;
+    var lastIndex = 0;
+    var match;
+
+    while((match = fenceRe.exec(text)) !== null){
+      if(match.index > lastIndex){
+        parts.push({ type: "text", content: text.slice(lastIndex, match.index) });
+      }
+      parts.push({ type: "code", lang: match[1], content: match[2].replace(/\n$/, "") });
+      lastIndex = fenceRe.lastIndex;
+    }
+    if(lastIndex < text.length){
+      parts.push({ type: "text", content: text.slice(lastIndex) });
+    }
+    if(parts.length === 0){
+      parts.push({ type: "text", content: text });
+    }
+    // Any unmatched/stray ``` left in a text segment (odd fence count,
+    // truncated response, etc.) is stripped in cleanProse below.
+    return parts;
+  }
+
+  /* Strips block-level Markdown noise a segment might still contain:
+     stray/unmatched fences, heading hashes, bullet markers, bold/italic
+     markers, and converts links/images to their plain label text. */
+  function cleanProse(raw){
+    var s = raw;
+    s = s.replace(/```[a-zA-Z0-9_-]*/g, "");                 // stray fence markers
+    s = s.replace(/!\[([^\]]*)\]\([^)]*\)/g, function(m, alt){ return alt || ""; }); // images -> alt text only
+    s = s.replace(/\[([^\]]*)\]\([^)]*\)/g, function(m, label){ return label || ""; }); // links -> label text only
+    s = s.replace(/^\s{0,3}#{1,6}(?:\s+|$)/gm, "");           // heading hashes
+    s = s.replace(/\*\*([^*]+)\*\*/g, "$1");                  // bold
+    s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1$2");    // italic
+    return s;
+  }
+
+  function appendProseBlock(body, rawContent){
+    var cleaned = cleanProse(rawContent);
+    var lines = cleaned.split("\n");
+
+    var paragraphBuffer = [];
+    var listBuffer = [];
+
+    function flushParagraph(){
+      if(!paragraphBuffer.length) return;
+      var joined = paragraphBuffer.join("\n").replace(/^\n+|\n+$/g, "");
+      paragraphBuffer = [];
+      if(!joined.trim()) return;
+      var p = document.createElement("p");
+      appendInlineCode(p, joined);
+      body.appendChild(el("div", { class: "ai-block" }, [ p ]));
+    }
+
+    function flushList(){
+      if(!listBuffer.length) return;
+      var ul = document.createElement("ul");
+      listBuffer.forEach(function(itemText){
+        var li = document.createElement("li");
+        appendInlineCode(li, itemText);
+        ul.appendChild(li);
+      });
+      listBuffer = [];
+      body.appendChild(el("div", { class: "ai-block" }, [ ul ]));
+    }
+
+    lines.forEach(function(line){
+      var bulletMatch = line.match(/^\s*[-*+]\s+(.*)$/);
+      if(bulletMatch){
+        flushParagraph();
+        var itemText = bulletMatch[1].trim();
+        if(itemText) listBuffer.push(itemText);
+      } else if(line.trim() === ""){
+        flushParagraph();
+        flushList();
+      } else {
+        flushList();
+        paragraphBuffer.push(line);
+      }
+    });
+
+    flushParagraph();
+    flushList();
+  }
+
+  /* Renders inline `code` spans as <code> elements via textContent while
+     leaving the rest of the line as plain text nodes — safe either way,
+     since nothing is ever parsed as HTML. Also strips any leftover
+     unmatched backtick characters. */
+  function appendInlineCode(container, text){
+    var parts = text.split(/`([^`]+)`/g);
+    parts.forEach(function(part, i){
+      if(part === "") return;
+      if(i % 2 === 1){
+        container.appendChild(el("code", { class: "inline-code", text: part }));
+      } else {
+        container.appendChild(document.createTextNode(part.replace(/`/g, "")));
+      }
+    });
+  }
+
+  /* ---------------- loaders ---------------- */
+
+  function loadSummary(){
+    return getJSON("/api/summary").then(renderSummary).catch(function(){
+      renderSummaryError();
+      setSystemStatus(false);
+    });
+  }
+
+  function loadChart(){
+    document.getElementById("issuesChart").innerHTML = '<div class="load-state">Loading chart data…</div>';
+    return getJSON("/api/issues-over-time").then(renderChart).catch(renderChartError);
+  }
+
+  function loadTopIssues(){
+    document.getElementById("topIssues").innerHTML = '<div class="load-state">Loading issues…</div>';
+    return getJSON("/api/top-issues").then(renderTopIssues).catch(renderTopIssuesError);
+  }
+
+  function setSystemStatus(ok){
+    var pill = document.getElementById("statusPill");
+    var text = document.getElementById("statusText");
+    if(ok){
+      pill.classList.remove("status-offline");
+      text.textContent = "System Ready";
+    } else {
+      pill.classList.add("status-offline");
+      text.textContent = "Data Unavailable";
+    }
+  }
+
+  function loadDashboard(){
+    setSystemStatus(true);
+    loadSummary();
+    loadChart();
+    loadTopIssues();
+  }
+  /* ---------------- live audit ---------------- */
+
+  var auditForm = document.getElementById("auditForm");
+  var auditUrl = document.getElementById("auditUrl");
+  var auditButton = document.getElementById("auditButton");
+  var auditMessage = document.getElementById("auditMessage");
+
+  function showAuditMessage(message, type) {
+    auditMessage.textContent = message;
+    auditMessage.className = "audit-message " + type;
+  }
+function waitForAuditCompletion(targetUrl) {
+
+  return new Promise(function(resolve, reject) {
+
+    var attempts = 0;
+    var maxAttempts = 180;
+
+    function checkStatus() {
+
+      attempts++;
+
+      getJSON("/api/scan-status")
+        .then(function(status) {
+
+          if (
+            status.finished &&
+            status.targetUrl &&
+            status.targetUrl === targetUrl
+          ) {
+            resolve(status);
+            return;
+          }
+
+          if (attempts >= maxAttempts) {
+            reject(new Error(
+              "Audit is taking longer than expected. Please refresh the dashboard."
+            ));
+            return;
+          }
+
+          setTimeout(checkStatus, 2000);
+
+        })
+        .catch(function(error) {
+
+          if (attempts >= maxAttempts) {
+            reject(error);
+            return;
+          }
+
+          setTimeout(checkStatus, 2000);
+
+        });
+    }
+
+    checkStatus();
+  });
+}
+  auditForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    var url = auditUrl.value.trim();
+
+    if (!url) {
+      showAuditMessage("Please enter a website URL.", "error");
+      return;
+    }
+
+    try {
+      new URL(url);
+    } catch (error) {
+      showAuditMessage("Please enter a valid URL.", "error");
+      return;
+    }
+
+    auditButton.disabled = true;
+    auditButton.innerHTML = "";
+
+    var spinner = document.createElement("span");
+    spinner.className = "audit-spinner";
+    spinner.setAttribute("aria-hidden", "true");
+
+    auditButton.appendChild(spinner);
+    auditButton.appendChild(document.createTextNode(" Starting..."));
+
+    showAuditMessage("Audit started. Scanning the website...", "success");
+
+    fetch("/api/audit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url: url
+      })
+    })
+    .then(function(response) {
+      return response.text().then(function(raw) {
+        var data = null;
+
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          data = null;
+        }
+
+        if (!response.ok || !data) {
+          var message = data && data.error
+            ? data.error
+            : "Audit request failed.";
+
+          throw new Error(message);
+        }
+
+        return data;
+      });
+    })
+    .then(function(data) {
+
+  showAuditMessage(
+    "Audit is running for " + data.targetUrl + ". Please wait...",
+    "success"
+  );
+
+  return waitForAuditCompletion(data.targetUrl);
+
+})
+.then(function(status) {
+
+  showAuditMessage(
+    "Audit completed successfully. Dashboard updated.",
+    "success"
+  );
+
+  loadDashboard();
+
+})
+.catch(function(error) {
+
+  showAuditMessage(
+    error.message || "Unable to complete audit.",
+    "error"
+  );
+
+})
+    .finally(function() {
+      auditButton.disabled = false;
+      auditButton.textContent = "Audit";
+    });
+  });
+  loadDashboard();
+})();
+</script>
+
+</body>
+</html>
