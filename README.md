@@ -1,85 +1,85 @@
-# Accessibility Scanner (Playwright + axe-core + Postgres)
+AI-Assisted Accessibility Auditor
 
-Implements the 5-step pipeline:
+A web-based accessibility auditing system built with Playwright, axe-core, Node.js, Express.js, and PostgreSQL. Users can enter a website URL, run an audit, view dynamically detected accessibility issues, see page screenshots, compare scan history, and use AI-assisted explanations and fixes.
 
-1. **Website** — you pick a `TARGET_URL`.
-2. **Playwright Crawls** — `src/crawl.js` opens it and follows same-origin links.
-3. **Run axe-core** — each page is scanned with `@axe-core/playwright`.
-4. **Store in Postgres** — every issue is saved with page, severity, issue, and fix.
-5. **Developer Dashboard** — `src/server.js` + `public/dashboard.html` show KPI cards,
-   an issues-over-time chart (current vs. previous scan), and a top-issues list.
+What I Learned
+Web automation and page crawling with Playwright
+Automated accessibility testing with axe-core
+Building REST APIs with Node.js and Express.js
+PostgreSQL database design and data relationships
+Dynamic URL handling and asynchronous audit processes
+Automated screenshot capture and page-level result mapping
+AI API integration for contextual explanations and fixes
+Historical scan comparison and dashboard data visualization
+Git, GitHub, environment variables, and project security
+Project Overview
 
-## 1. Install prerequisites
+This project automates website accessibility auditing by combining browser automation with axe-core testing. It detects accessibility violations from the actual scanned website, stores the results, captures screenshots, and presents everything through a dashboard.
 
-- Node.js 18+
-- PostgreSQL running locally (or a connection string to one)
+Project Relevance
 
-```bash
+The project demonstrates practical skills in web accessibility, backend development, browser automation, database management, API integration, AI-assisted development, and software engineering. It also addresses the practical need to identify accessibility issues before they affect website users.
+
+How It Works
+
+Users enter a website URL → Playwright crawls the pages → axe-core detects accessibility violations → screenshots are captured → results are stored in PostgreSQL → the dashboard displays findings and history → AI provides explanations and suggested fixes.
+
+Technology Used
+Node.js
+Express.js
+Playwright
+axe-core
+PostgreSQL
+JavaScript
+HTML / CSS
+AI API
+Git / GitHub
+Project Structure
+AI-Assisted-Accessibility-Auditor/
+├── ai.js
+├── chart.js
+├── crawl.js
+├── dashboard.html
+├── db.js
+├── initDb.js
+├── package.json
+├── package-lock.json
+├── schema.sql
+├── server.js
+├── public/
+│   └── chart.js
+├── .env.example
+├── .gitignore
+└── README.md
+
+Generated files such as .env, node_modules, and screenshots are excluded from the repository.
+
+Getting Started
+1. Clone
+git clone https://github.com/AntonyJos-coder/AI-Assisted-Accessibility-Auditor.git
+cd AI-Assisted-Accessibility-Auditor
+2. Install dependencies
 npm install
-npx playwright install chromium   # downloads the browser Playwright drives
-```
+3. Install Playwright
+npx playwright install
+4. Configure environment
 
-## 2. Configure
+Create .env using .env.example and configure your PostgreSQL connection.
 
-```bash
-cp .env.example .env
-```
+TARGET_URL=https://example.com
+MAX_PAGES=20
+DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/a11y_scanner
+PORT=3000
+5. Initialize database
 
-Edit `.env`:
-- `TARGET_URL` — the site to crawl (e.g. `https://your-site.com`)
-- `MAX_PAGES` — crawl limit, default 20
-- `DATABASE_URL` — your Postgres connection string
-- `PORT` — dashboard port, default 3000
+Make sure PostgreSQL is running, then initialize the required database tables using the project's database setup.
 
-## 3. Create the database and tables
-
-```bash
-createdb a11y_scanner        # if the DB doesn't exist yet
-npm run init-db              # applies db/schema.sql
-```
-
-## 4. Run a scan
-
-```bash
-npm run crawl
-```
-
-This crawls `TARGET_URL`, runs axe-core on each page found, and writes every
-violation into the `issues` table (linked to a row in `scans`). Run it again
-later on the same site and the dashboard will compare the two most recent
-scans.
-
-## 5. Open the dashboard
-
-```bash
+6. Start the application
 npm run server
-```
 
-Visit `http://localhost:3000`.
+Open:
 
-## Project layout
+http://localhost:3000
+7. Run an audit
 
-```
-axe-a11y-scanner/
-├── db/schema.sql       # scans + issues tables
-├── src/
-│   ├── db.js           # Postgres pool + insert/update helpers
-│   ├── initDb.js        # applies schema.sql
-│   ├── crawl.js         # steps 1-4: crawl, scan, store
-│   └── server.js         # step 5: dashboard API + static server
-├── public/dashboard.html # step 5: dashboard UI
-└── .env.example
-```
-
-## Notes / what you'll need to do
-
-- I couldn't install Postgres or download the Playwright browser or run this
-  end-to-end in this workspace (no network access to those services here), so
-  this hasn't been run against a live site — test it against a small site
-  first, e.g. `TARGET_URL=https://example.com` with `MAX_PAGES=3`.
-- `MAX_PAGES` defaults to 20 to avoid accidentally crawling a huge site — raise
-  it once you're happy with the results on a small run.
-- axe's `impact` field is one of `critical | serious | moderate | minor`; the
-  dashboard's KPI cards show the first three to match the mockup.
-- If you want scheduled/automatic scans (e.g. nightly), wrap `npm run crawl`
-  in a cron job or CI pipeline — that's not included here.
+Enter a website URL in the dashboard and click Audit. The system will scan the website and display the detected accessibility results.
