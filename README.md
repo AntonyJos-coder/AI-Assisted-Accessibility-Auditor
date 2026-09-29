@@ -251,4 +251,4 @@ This project was developed to explore how **browser automation, accessibility te
 
 **Antony Jos**
 
-Computer Engineering | Web Development | Data Analytics
+Computer Engineer | App Development |Web Development | Data Analytics
