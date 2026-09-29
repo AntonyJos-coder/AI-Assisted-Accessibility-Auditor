@@ -1,85 +1,65 @@
-AI-Assisted Accessibility Auditor
+# AI-Assisted Accessibility Auditor ♿
 
-A web-based accessibility auditing system built with Playwright, axe-core, Node.js, Express.js, and PostgreSQL. Users can enter a website URL, run an audit, view dynamically detected accessibility issues, see page screenshots, compare scan history, and use AI-assisted explanations and fixes.
+## AI-Powered Website Accessibility Auditing System
 
-What I Learned
-Web automation and page crawling with Playwright
-Automated accessibility testing with axe-core
-Building REST APIs with Node.js and Express.js
-PostgreSQL database design and data relationships
-Dynamic URL handling and asynchronous audit processes
-Automated screenshot capture and page-level result mapping
-AI API integration for contextual explanations and fixes
-Historical scan comparison and dashboard data visualization
-Git, GitHub, environment variables, and project security
-Project Overview
+![Node.js](https://img.shields.io/badge/Backend-Node.js-339933)
+![Express](https://img.shields.io/badge/Framework-Express.js-000000)
+![Playwright](https://img.shields.io/badge/Automation-Playwright-2EAD33)
+![axe-core](https://img.shields.io/badge/Accessibility-axe--core-663399)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1)
+![AI](https://img.shields.io/badge/AI-Assisted-2563EB)
+![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E)
 
-This project automates website accessibility auditing by combining browser automation with axe-core testing. It detects accessibility violations from the actual scanned website, stores the results, captures screenshots, and presents everything through a dashboard.
+> An AI-assisted accessibility auditing system that automatically crawls websites using Playwright, detects accessibility violations with axe-core, captures page screenshots, stores audit history, and provides AI-powered explanations and suggested fixes.
 
-Project Relevance
+---
 
-The project demonstrates practical skills in web accessibility, backend development, browser automation, database management, API integration, AI-assisted development, and software engineering. It also addresses the practical need to identify accessibility issues before they affect website users.
+## 🖥️ Dashboard Preview
 
-How It Works
+<!-- Add your dashboard screenshot here -->
+![Accessibility Auditor Dashboard](screenshots/dashboard-preview.png)
 
-Users enter a website URL → Playwright crawls the pages → axe-core detects accessibility violations → screenshots are captured → results are stored in PostgreSQL → the dashboard displays findings and history → AI provides explanations and suggested fixes.
+| Feature | Description |
+|---|---|
+| 🔍 **Website Audit** | Enter any website URL directly from the dashboard and start an accessibility scan |
+| ♿ **Accessibility Detection** | Dynamically detects accessibility violations using axe-core |
+| 🌐 **Website Crawling** | Playwright automatically crawls pages within the target website |
+| 📸 **Page Screenshots** | Captures screenshots of scanned pages and connects them with audit results |
+| 🤖 **AI Analysis** | Provides contextual explanations for detected accessibility problems |
+| 🛠️ **AI Fix Suggestions** | Generates suggested fixes for accessibility violations |
+| 📊 **Audit Dashboard** | Displays total issues, severity levels, scanned pages, and issue statistics |
+| 📈 **Historical Comparison** | Compares accessibility issues between current and previous scans |
+| 🗄️ **Result Storage** | Stores scan results, page information, and screenshot paths in PostgreSQL |
 
-Technology Used
-Node.js
-Express.js
-Playwright
-axe-core
-PostgreSQL
-JavaScript
-HTML / CSS
-AI API
-Git / GitHub
-Project Structure
+---
+
+## ⚙️ How It Works
+
+**Enter Website URL → Playwright Crawls Website → axe-core Detects Violations → Screenshots Captured → Results Stored in PostgreSQL → Dashboard Displays Results → AI Explains Issues & Suggests Fixes**
+
+---
+
+## 🛠️ Tech Stack
+
+**JavaScript, Node.js, Express.js, Playwright, axe-core, PostgreSQL, HTML, CSS, REST API, AI API**
+
+---
+
+## 📂 Project Structure
+
+```text
 AI-Assisted-Accessibility-Auditor/
 ├── ai.js
-├── chart.js
 ├── crawl.js
 ├── dashboard.html
 ├── db.js
 ├── initDb.js
-├── package.json
-├── package-lock.json
-├── schema.sql
 ├── server.js
+├── schema.sql
+├── package.json
 ├── public/
 │   └── chart.js
+├── screenshots/
 ├── .env.example
 ├── .gitignore
 └── README.md
-
-Generated files such as .env, node_modules, and screenshots are excluded from the repository.
-
-Getting Started
-1. Clone
-git clone https://github.com/AntonyJos-coder/AI-Assisted-Accessibility-Auditor.git
-cd AI-Assisted-Accessibility-Auditor
-2. Install dependencies
-npm install
-3. Install Playwright
-npx playwright install
-4. Configure environment
-
-Create .env using .env.example and configure your PostgreSQL connection.
-
-TARGET_URL=https://example.com
-MAX_PAGES=20
-DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/a11y_scanner
-PORT=3000
-5. Initialize database
-
-Make sure PostgreSQL is running, then initialize the required database tables using the project's database setup.
-
-6. Start the application
-npm run server
-
-Open:
-
-http://localhost:3000
-7. Run an audit
-
-Enter a website URL in the dashboard and click Audit. The system will scan the website and display the detected accessibility results.
